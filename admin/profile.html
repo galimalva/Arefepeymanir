@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <script src="../assets/js/vendor/supabase-js.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>پنل مدیریت | پروفایل نویسنده</title>
+  <link rel="stylesheet" href="../assets/css/style.css?v=18">
+</head>
+<body data-page="profile" data-admin="true">
+  <header id="site-header"></header>
+  <main class="container">
+    <section class="admin-panel" aria-label="مدیریت پروفایل نویسنده">
+      <h1 class="section-title">پروفایل نویسنده</h1>
+      <p class="form-note">این اطلاعات در صفحهٔ «معرفی» و سربرگ سایت نمایش داده می‌شود.</p>
+      <div id="pf-error" class="page-error" hidden></div>
+      <div id="pf-loading" class="spinner-wrap"><span class="spinner" aria-hidden="true"></span>در حال بارگذاری…</div>
+      <form id="profile-form" class="contact-form" novalidate hidden>
+        <div class="form-grid">
+          <div class="form-group"><label for="pf-full-name">نام کامل *</label><input class="form-control" id="pf-full-name" required><span class="field-error" id="pf-full-name-error"></span></div>
+          <div class="form-group"><label for="pf-role">نقش / عنوان</label><input class="form-control" id="pf-role"></div>
+          <div class="form-group"><label for="pf-birth-year">سال تولد</label><input class="form-control" id="pf-birth-year" type="number" min="1300" max="1500"><span class="field-error" id="pf-birth-year-error"></span></div>
+          <div class="form-group"><label for="pf-birth-place">محل تولد</label><input class="form-control" id="pf-birth-place"></div>
+          <div class="form-group"><label for="pf-education">تحصیلات</label><input class="form-control" id="pf-education"></div>
+          <div class="form-group"><label for="pf-email">ایمیل</label><input class="form-control" id="pf-email" type="email" dir="ltr"><span class="field-error" id="pf-email-error"></span></div>
+          <div class="form-group"><label for="pf-phone">تلفن</label><input class="form-control" id="pf-phone" dir="ltr"></div>
+          <div class="form-group"><label for="pf-quote">جملهٔ امضایی</label><input class="form-control" id="pf-quote"></div>
+          <div class="form-group form-group--full"><label for="pf-bio-short">بیوگرافی کوتاه</label><textarea class="form-control" id="pf-bio-short" rows="2"></textarea></div>
+          <div class="form-group form-group--full"><label for="pf-bio-full">بیوگرافی کامل (هر پاراگراف در یک خط)</label><textarea class="form-control" id="pf-bio-full" rows="5"></textarea></div>
+          <div class="form-group form-group--full"><label for="pf-photo">عکس نویسنده</label>
+            <input class="form-control" id="pf-photo" type="file" accept="image/jpeg,image/png,image/webp">
+            <div id="pf-photo-preview" class="cover-preview">هنوز عکسی انتخاب نشده است.</div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="pf-save" type="submit">ذخیرهٔ پروفایل</button>
+        </div>
+      </form>
+    </section>
+  </main>
+  <footer id="site-footer"></footer>
+  <script type="module" src="../assets/js/main.js"></script>
+  <script type="module" src="../assets/js/admin/profile.js"></script>
+</body>
+</html>

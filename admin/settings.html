@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <script src="../assets/js/vendor/supabase-js.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>پنل مدیریت | تنظیمات سایت</title>
+  <link rel="stylesheet" href="../assets/css/style.css?v=18">
+</head>
+<body data-page="settings" data-admin="true">
+  <header id="site-header"></header>
+  <main class="container">
+    <section class="admin-panel" aria-label="مدیریت تنظیمات سایت">
+      <h1 class="section-title">تنظیمات سایت</h1>
+      <p class="form-note">این مقادیر در سربرگ (هدر) و پاصفحه (فوتر) سایت و بخش «تماس» نمایش داده می‌شوند.</p>
+      <div id="st-error" class="page-error" hidden></div>
+      <div id="st-loading" class="spinner-wrap"><span class="spinner" aria-hidden="true"></span>در حال بارگذاری…</div>
+      <form id="settings-form" class="contact-form" novalidate hidden>
+        <div class="form-grid">
+          <div class="form-group"><label for="st-title">نام سایت *</label><input class="form-control" id="st-title" required><span class="field-error" id="st-title-error"></span></div>
+          <div class="form-group"><label for="st-tagline">شعار کوتاه</label><input class="form-control" id="st-tagline"></div>
+          <div class="form-group"><label for="st-email">ایمیل تماس</label><input class="form-control" id="st-email" type="email" dir="ltr"></div>
+          <div class="form-group"><label for="st-phone">تلفن تماس</label><input class="form-control" id="st-phone" dir="ltr"></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="st-save" type="submit">ذخیرهٔ تنظیمات</button>
+        </div>
+      </form>
+    </section>
+    <section class="admin-panel" aria-label="تغییر رمز ورود">
+      <h2 class="section-title">تغییر رمز ورود</h2>
+      <p class="form-note">برای امنیت، ابتدا رمز فعلی شما بررسی می‌شود؛ پس از تغییر، در جلسه‌های بعدی فقط با رمز جدید می‌توانید وارد شوید.</p>
+      <div id="pw-error" class="page-error" hidden></div>
+      <form id="password-form" class="contact-form" novalidate>
+        <div class="form-grid">
+          <div class="form-group"><label for="pw-current">رمز فعلی *</label><input class="form-control" id="pw-current" type="password" dir="ltr" autocomplete="current-password" required><span class="field-error" id="pw-current-error"></span></div>
+          <div class="form-group"><label for="pw-new">رمز جدید *</label><input class="form-control" id="pw-new" type="password" dir="ltr" autocomplete="new-password" required><span class="field-error" id="pw-new-error"></span></div>
+          <div class="form-group"><label for="pw-confirm">تکرار رمز جدید *</label><input class="form-control" id="pw-confirm" type="password" dir="ltr" autocomplete="new-password" required><span class="field-error" id="pw-confirm-error"></span></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="pw-submit" type="submit">تغییر رمز</button>
+        </div>
+      </form>
+    </section>
+  </main>
+  <footer id="site-footer"></footer>
+  <script type="module" src="../assets/js/main.js"></script>
+  <script type="module" src="../assets/js/admin/settings.js"></script>
+</body>
+</html>

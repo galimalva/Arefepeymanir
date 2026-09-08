@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <script src="../assets/js/vendor/supabase-js.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>پنل مدیریت | داشبورد</title>
+  <link rel="stylesheet" href="../assets/css/style.css?v=18">
+</head>
+<body data-page="dashboard" data-admin="true">
+  <header id="site-header"></header>
+  <main class="container">
+    <section class="admin-panel" aria-label="داشبورد مدیریت">
+      <h1 class="section-title">داشبورد مدیریت</h1>
+      <div id="dash-error" class="page-error" hidden></div>
+      <div id="dash-loading" class="spinner-wrap"><span class="spinner" aria-hidden="true"></span>در حال بارگذاری…</div>
+      <div id="dash-body" class="dashboard-content" hidden></div>
+    </section>
+  </main>
+  <footer id="site-footer"></footer>
+  <script type="module" src="../assets/js/main.js"></script>
+  <script type="module" src="../assets/js/admin/dashboard.js"></script>
+</body>
+</html>

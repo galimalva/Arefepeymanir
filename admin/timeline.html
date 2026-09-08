@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <script src="../assets/js/vendor/supabase-js.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>پنل مدیریت | سوابق و رزومه</title>
+  <link rel="stylesheet" href="../assets/css/style.css?v=18">
+</head>
+<body data-page="timeline" data-admin="true">
+  <header id="site-header"></header>
+  <main class="container">
+    <section class="admin-panel" aria-label="مدیریت سوابق و رزومه">
+      <div class="admin-head">
+        <h1 class="section-title">سوابق و رزومه</h1>
+        <div class="admin-head-actions">
+          <button class="btn" id="aAdd">+ سابقهٔ جدید</button>
+        </div>
+      </div>
+      <p class="form-note">این موارد در صفحهٔ «معرفی» و «رزومه» نمایش داده می‌شوند؛ فقط موارد «منتشرشده» در سایت عمومی دیده می‌شوند.</p>
+      <div id="tl-error" class="page-error" hidden></div>
+      <div id="aTable"><p class="section-empty">در حال بارگذاری…</p></div>
+    </section>
+  </main>
+  <footer id="site-footer"></footer>
+  <script type="module" src="../assets/js/main.js"></script>
+  <script type="module" src="../assets/js/admin/timeline.js"></script>
+</body>
+</html>
