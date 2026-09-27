@@ -1,4 +1,4 @@
-const config = {
+﻿const config = {
   site: {
     name: 'Signature',
     title: 'نویسنده و نگارگر',
@@ -47,7 +47,8 @@ const config = {
   },
   contact: {
     email: '',
-    phone: ''
+    phone: '',
+    address: ''
   },
   navLinks: [
     { href: 'index.html', key: 'index', label: 'خانه' },
@@ -65,3 +66,4 @@ const config = {
 };
 
 export default config;
+

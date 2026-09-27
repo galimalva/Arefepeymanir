@@ -41,6 +41,7 @@ async function loadSiteContext() {
     tagline: config.site.tagline,
     email: config.contact.email || '',
     phone: config.contact.phone || '',
+    address: config.contact.address || '',
     socials: (config.socials || []).slice()
   };
   let client;
@@ -59,6 +60,7 @@ async function loadSiteContext() {
       if (settings.tagline) context.tagline = settings.tagline;
       if (settings.contact_email) context.email = settings.contact_email;
       if (settings.contact_phone) context.phone = settings.contact_phone;
+      if (settings.contact_address) context.address = settings.contact_address;
     }
     if (socials && socials.length) {
       context.socials = socials.map((link) => ({
@@ -72,7 +74,7 @@ async function loadSiteContext() {
   return context;
 }
 
-function getSiteContext() {
+export function getSiteContext() {
   if (!siteContextPromise) {
     siteContextPromise = loadSiteContext();
   }
@@ -252,24 +254,26 @@ export async function renderFooter() {
         .map((item) => `<li><a href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a></li>`)
         .join('');
 
-  const socials = context.socials.length
-    ? context.socials
-        .map(
-          (item) =>
-            `<a class="footer-social-link" href="${escapeHtml(item.url)}" rel="noopener" target="_blank">${escapeHtml(item.label)}</a>`
-        )
-        .join('')
-    : '<span class="footer-pending">در انتظار اطلاعات شبکه‌های اجتماعی</span>';
+  const socials = context.socials
+    .map(
+      (item) =>
+        `<a class="footer-social-link" href="${escapeHtml(item.url)}" rel="noopener" target="_blank">${escapeHtml(item.label)}</a>`
+    )
+    .join('');
+  const socialsBlock = socials
+    ? `<div class="footer-socials" aria-label="شبکه‌های اجتماعی">${socials}</div>`
+    : '';
 
-  const hasContact = !!(context.email || context.phone);
-  const contacts = hasContact
-    ? [
-        context.email && `<li>ایمیل: ${escapeHtml(context.email)}</li>`,
-        context.phone && `<li>تلفن: ${escapeHtml(context.phone)}</li>`
-      ]
-        .filter(Boolean)
-        .join('')
-    : '<li class="footer-pending">اطلاعات تماس در مرحله محتوا تکمیل می‌شود.</li>';
+  const contacts = [
+    context.email && `<li>ایمیل: ${escapeHtml(context.email)}</li>`,
+    context.phone && `<li>تلفن: ${escapeHtml(context.phone)}</li>`,
+    context.address && `<li>نشانی: ${escapeHtml(context.address)}</li>`
+  ]
+    .filter(Boolean)
+    .join('');
+  const contactCol = contacts
+    ? `<div class="footer-col"><h4 class="footer-title">تماس</h4><ul class="footer-contacts">${contacts}</ul></div>`
+    : '';
 
   el.innerHTML = `
     <div class="container">
@@ -277,16 +281,13 @@ export async function renderFooter() {
         <div class="footer-col">
           <a class="brand" href="${isAdmin ? 'dashboard.html' : 'index.html'}"><span class="brand-mark" aria-hidden="true"></span><span>${escapeHtml(context.title)}</span></a>
           <p class="footer-about">${escapeHtml(context.tagline)}</p>
-          <div class="footer-socials" aria-label="شبکه‌های اجتماعی">${socials}</div>
+          ${socialsBlock}
         </div>
         <nav class="footer-col" aria-label="دسترسی سریع">
           <h4 class="footer-title">دسترسی سریع</h4>
           <ul class="footer-links">${links}</ul>
         </nav>
-        <div class="footer-col">
-          <h4 class="footer-title">تماس</h4>
-          <ul class="footer-contacts">${contacts}</ul>
-        </div>
+        ${contactCol}
       </div>
       <div class="footer-bottom">
         <span>© ${year} ${escapeHtml(context.title)}</span>

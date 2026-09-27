@@ -23,11 +23,14 @@ create table if not exists public.author_006_site_settings (
   tagline       text,
   contact_email text,
   contact_phone text,
+  contact_address text,
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now(),
   constraint author_006_site_settings_single_row
     check (id = '00000000-0000-0000-0000-000000000001')
 );
+-- ستون نشانی برای جدول‌های از قبل ساخته‌شده
+alter table public.author_006_site_settings add column if not exists contact_address text;
 
 -- 3) پروفایل ساختارمند نویسنده — سطر تکی
 create table if not exists public.author_006_author_profile (

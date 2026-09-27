@@ -1,5 +1,6 @@
 import { getClient, dbTable } from '../supabase.js';
-import { toast } from '../utils.js';
+import { getSiteContext } from '../ui.js';
+import { escapeHtml, toast } from '../utils.js';
 
 function el(id) {
   return document.getElementById(id);
@@ -79,8 +80,32 @@ async function handleSubmit(event) {
   }
 }
 
+async function renderContactInfo() {
+  const box = el('contact-info');
+  if (!box) return;
+  const section = document.querySelector('.contact-info-section');
+  const context = await getSiteContext();
+  const rows = [
+    context.email && { label: 'ایمیل', value: context.email, ltr: true },
+    context.phone && { label: 'تلفن', value: context.phone, ltr: true },
+    context.address && { label: 'نشانی', value: context.address }
+  ].filter(Boolean);
+  if (!rows.length) {
+    if (section) section.hidden = true;
+    return;
+  }
+  box.innerHTML = rows
+    .map(
+      (row) =>
+        `<li class="contact-info-item"><span class="contact-info-label">${escapeHtml(row.label)}</span><span class="contact-info-value"${row.ltr ? ' dir="ltr"' : ''}>${escapeHtml(row.value)}</span></li>`
+    )
+    .join('');
+  if (section) section.hidden = false;
+}
+
 if (typeof document !== 'undefined') {
   document.addEventListener('DOMContentLoaded', () => {
+    renderContactInfo();
     const form = el('contact-form');
     if (form) form.addEventListener('submit', handleSubmit);
   });

@@ -12,7 +12,8 @@ export function buildSettingsPayload(values) {
     site_title: String(values.site_title || '').trim(),
     tagline: String(values.tagline || '').trim() || null,
     contact_email: String(values.contact_email || '').trim() || null,
-    contact_phone: String(values.contact_phone || '').trim() || null
+    contact_phone: String(values.contact_phone || '').trim() || null,
+    contact_address: String(values.contact_address || '').trim() || null
   };
 }
 
@@ -34,6 +35,7 @@ export function fillSettingsForm(settings) {
   el('st-tagline').value = settings?.tagline || '';
   el('st-email').value = settings?.contact_email || '';
   el('st-phone').value = settings?.contact_phone || '';
+  el('st-address').value = settings?.contact_address || '';
 }
 
 export async function loadSettings() {
@@ -75,7 +77,8 @@ export function attachSettingsForm(form) {
       site_title: el('st-title').value,
       tagline: el('st-tagline').value,
       contact_email: el('st-email').value,
-      contact_phone: el('st-phone').value
+      contact_phone: el('st-phone').value,
+      contact_address: el('st-address').value
     });
     const validation = validateSettings(payload);
     if (validation.error) {
