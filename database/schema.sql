@@ -32,7 +32,7 @@ create table if not exists public.author_006_site_settings (
 -- ستون نشانی برای جدول‌های از قبل ساخته‌شده
 alter table public.author_006_site_settings add column if not exists contact_address text;
 
--- 3) پروفایل ساختارمند نویسنده — سطر تکی
+-- 3) پروفایل ساختارمند روایت‌پرداز — سطر تکی
 create table if not exists public.author_006_author_profile (
   id             uuid primary key default '00000000-0000-0000-0000-000000000002',
   full_name      text not null default '',
@@ -475,7 +475,7 @@ create policy author_006_private_admin on storage.objects
 --  بخش ۶ — سطرهای پایه (ON CONFLICT => بی‌خطر در اجرای مجدد)
 -- ============================================================
 insert into public.author_006_site_settings (id, site_title)
-values ('00000000-0000-0000-0000-000000000001', 'نویسنده و نقاش')
+values ('00000000-0000-0000-0000-000000000001', 'روایت‌پرداز و نقاش')
 on conflict (id) do nothing;
 
 insert into public.author_006_author_profile (id, full_name)

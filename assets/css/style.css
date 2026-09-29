@@ -1537,6 +1537,12 @@ select.form-control {
   font-weight: 500;
 }
 
+.timeline-period--inline {
+  margin-block-end: 0;
+  margin-inline-start: var(--space-2);
+  vertical-align: baseline;
+}
+
 .timeline-title {
   margin: 0;
   font-size: var(--text-md);
@@ -3176,7 +3182,7 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* ===== Home — معرفی نویسنده ===== */
+/* ===== Home — معرفی روایت‌پرداز ===== */
 .eyebrow {
   margin: 0 0 var(--space-2);
   color: var(--color-secondary-strong);

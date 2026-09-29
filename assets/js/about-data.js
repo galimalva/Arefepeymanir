@@ -1,6 +1,6 @@
 import { escapeHtml, toPersianDigits } from './utils.js';
 
-export const PENDING = 'در حال تکمیل — پس از تکمیل اطلاعات توسط نویسنده نمایش داده می‌شود.';
+export const PENDING = 'در حال تکمیل — پس از تکمیل اطلاعات توسط روایت‌پرداز نمایش داده می‌شود.';
 
 export function setHtml(id, html) {
   const node = document.getElementById(id);
@@ -12,14 +12,15 @@ export function emptyNote() {
 }
 
 export function timelineHtml(items, category) {
+  const inlinePeriod = category === 'teaching';
   return (
     '<ul class="timeline">' +
     items
       .map(
         (item) => `
       <li class="timeline-item" data-category="${escapeHtml(category)}">
-        ${item.period ? `<span class="timeline-period">${escapeHtml(item.period)}</span>` : ''}
-        <h3 class="timeline-title">${escapeHtml(item.title)}</h3>
+        ${!inlinePeriod && item.period ? `<span class="timeline-period">${escapeHtml(item.period)}</span>` : ''}
+        <h3 class="timeline-title">${escapeHtml(item.title)}${inlinePeriod && item.period ? ` <span class="timeline-period timeline-period--inline">${escapeHtml(item.period)}</span>` : ''}</h3>
         ${item.description ? `<p class="timeline-desc">${escapeHtml(item.description)}</p>` : ''}
       </li>`
       )
@@ -81,10 +82,10 @@ export const FALLBACK_TIMELINE = [
   { category: 'education', title: 'مدرک ممتاز از مؤسسه توسعه هنرهای تجسمی تهران', period: null, description: 'در رشته‌های تذهیب، گل و مرغ و مینیاتور.' },
   { category: 'education', title: 'گواهینامه مربی‌گری و مدیریت', period: null, description: 'سازمان فنی و حرفه‌ای.' },
   { category: 'teaching', title: 'مدرس نقاشی ایرانی دانشگاه آزاد', period: null, description: null },
-  { category: 'teaching', title: 'تدریس مینیاتور و نقاشی مدرن', period: 'از ۱۳۸۹', description: null },
-  { category: 'teaching', title: 'مدرس کلاس‌های تخصصی هنر مجتمع امام رضا (ع)', period: '۱۳۹۳–۱۳۹۸', description: 'همراه با داوری آثار.' },
+  { category: 'teaching', title: 'تدریس مینیاتور و نقاشی مدرن', period: 'از سال ۱۳۸۹', description: null },
+  { category: 'teaching', title: 'مدرس کلاس‌های تخصصی هنر مجتمع امام رضا (ع)', period: 'از ۱۳۹۳ تا ۱۳۹۸', description: 'همراه با داوری آثار.' },
   { category: 'teaching', title: 'آسیستان کلاس‌های تخصصی هنر مجتمع امام رضا (ع)', period: null, description: null },
-  { category: 'teaching', title: 'دریافت اجازه تدریس', period: '۱۳۹۸', description: 'از مدیر گروه هنر دانشگاه تربیت مدرس تهران و استاد اسکندرپور خرمی.' },
+  { category: 'teaching', title: 'دریافت اجازه تدریس', period: 'در سال ۱۳۹۸', description: 'از مدیر گروه هنر دانشگاه تربیت مدرس تهران و استاد اسکندرپور خرمی.' },
   { category: 'career', title: 'عضو انجمن تذهیب‌کاران رضوان', period: null, description: null },
   { category: 'career', title: 'عضو صنایع دستی و میراث فرهنگی', period: null, description: null },
   { category: 'career', title: 'عضو هیئت مؤسس کانون نگارگران زرافشان', period: 'از ۱۳۸۹', description: null },

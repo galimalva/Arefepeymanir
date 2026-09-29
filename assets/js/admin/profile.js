@@ -71,7 +71,7 @@ export function fillForm(profile) {
   uploadedPath = null;
   const preview = el('pf-photo-preview');
   if (preview) {
-    if (profile?.photo_url) preview.innerHTML = `<img src="${publicUrl(profile.photo_url)}" alt="عکس فعلی نویسنده">`;
+    if (profile?.photo_url) preview.innerHTML = `<img src="${publicUrl(profile.photo_url)}" alt="عکس فعلی روایت‌پرداز">`;
     else preview.textContent = 'هنوز عکسی انتخاب نشده است.';
   }
 }
@@ -168,7 +168,7 @@ if (typeof document !== 'undefined') {
         }
         uploadedPath = path;
         const preview = el('pf-photo-preview');
-        if (preview) preview.innerHTML = `<img src="${publicUrl(path)}" alt="عکس جدید نویسنده">`;
+        if (preview) preview.innerHTML = `<img src="${publicUrl(path)}" alt="عکس جدید روایت‌پرداز">`;
         toast('عکس آپلود شد.');
       });
     }

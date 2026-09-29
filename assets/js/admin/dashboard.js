@@ -20,7 +20,7 @@ const QUICK_SECTIONS = [
   { href: 'comments.html', key: 'comments', label: 'نظرات' },
   { href: 'messages.html', key: 'messages', label: 'پیام‌های تماس' },
   { href: 'timeline.html', key: 'timeline', label: 'سوابق و رزومه' },
-  { href: 'profile.html', key: 'profile', label: 'پروفایل نویسنده' },
+  { href: 'profile.html', key: 'profile', label: 'پروفایل روایت‌پرداز' },
   { href: 'social-links.html', key: 'social-links', label: 'شبکه‌های اجتماعی' },
   { href: 'settings.html', key: 'settings', label: 'تنظیمات سایت' }
 ];
