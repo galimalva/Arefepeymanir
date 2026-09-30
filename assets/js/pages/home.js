@@ -1,4 +1,4 @@
-import { createArtworkCard } from '../ui.js';
+import { createArtworkCard, createBookCard } from '../ui.js';
 import { escapeHtml, toPersianDigits, placeholderImage } from '../utils.js';
 import { getClient, dbTable, publicUrl } from '../supabase.js';
 import config from '../../../config.js';
@@ -27,12 +27,20 @@ const PLACEHOLDER_ARTWORKS = [
   { id: 'a-4', title: 'مطالعهٔ فرم — جای‌نگهدار', technique: 'نقاشی', year: 1403 }
 ];
 
+const PLACEHOLDER_BOOKS = [
+  { id: 'b-1', title: 'کتاب نمونه — جای‌نگهدار', type: 'book', year: 1402 },
+  { id: 'b-2', title: 'مجموعه نمونه — جای‌نگهدار', type: 'collection', year: 1403 },
+  { id: 'b-3', title: 'اثر نمونه — جای‌نگهدار', type: 'other', year: 1404 }
+];
+
 let worksPool = [];
 let artsPool = [];
+let booksPool = [];
 
 const CACHE_KEYS = {
   literary_works: 'payman-home-works-cache',
-  artworks: 'payman-home-arts-cache'
+  artworks: 'payman-home-arts-cache',
+  books: 'payman-home-books-cache'
 };
 
 function readCache(table) {
@@ -158,6 +166,13 @@ function mapArts(rows) {
   }));
 }
 
+function mapBooks(rows) {
+  return (rows || []).map((b) => ({
+    ...b,
+    cover_url: b.cover ? publicUrl(b.cover) : (b.cover_url || null)
+  }));
+}
+
 function renderRandomWorks() {
   if (worksPool.length) {
     showFeatured('featured-works');
@@ -176,22 +191,35 @@ function renderRandomArts() {
   }
 }
 
+function renderRandomBooks() {
+  if (booksPool.length) {
+    showFeatured('featured-books');
+    renderInto('featured-books', pickRandom(booksPool).map(createBookCard).join(''));
+  } else {
+    hideFeatured('featured-books');
+  }
+}
+
 async function loadFeatured() {
   hideFeatured('featured-works');
   hideFeatured('featured-paintings');
+  hideFeatured('featured-books');
   let client;
   try {
     client = getClient();
   } catch {
     worksPool = PLACEHOLDER_WORKS.slice();
     artsPool = PLACEHOLDER_ARTWORKS.slice();
+    booksPool = PLACEHOLDER_BOOKS.slice();
     renderRandomWorks();
     renderRandomArts();
+    renderRandomBooks();
     return;
   }
-  const [worksData, artsData] = await Promise.all([
+  const [worksData, artsData, booksData] = await Promise.all([
     loadPublished(client, 'literary_works'),
-    loadPublished(client, 'artworks')
+    loadPublished(client, 'artworks'),
+    loadPublished(client, 'books')
   ]);
   if (worksData !== null) {
     worksPool = mapWorks(worksData);
@@ -205,8 +233,15 @@ async function loadFeatured() {
   } else {
     artsPool = mapArts(readCache('artworks'));
   }
+  if (booksData !== null) {
+    booksPool = mapBooks(booksData);
+    writeCache('books', booksData);
+  } else {
+    booksPool = mapBooks(readCache('books'));
+  }
   renderRandomWorks();
   renderRandomArts();
+  renderRandomBooks();
 }
 
 function accHeadFor(containerId) {
@@ -218,8 +253,10 @@ function accHeadFor(containerId) {
 function wireRandomOnClick() {
   const worksHead = accHeadFor('featured-works');
   const artsHead = accHeadFor('featured-paintings');
+  const booksHead = accHeadFor('featured-books');
   if (worksHead) worksHead.addEventListener('click', renderRandomWorks);
   if (artsHead) artsHead.addEventListener('click', renderRandomArts);
+  if (booksHead) booksHead.addEventListener('click', renderRandomBooks);
 }
 
 function initHome() {
