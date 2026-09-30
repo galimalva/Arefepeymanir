@@ -12,7 +12,7 @@ export function emptyNote() {
 }
 
 export function timelineHtml(items, category) {
-  const inlinePeriod = category === 'teaching';
+  const inlinePeriod = category === 'teaching' || category === 'career';
   return (
     '<ul class="timeline">' +
     items
