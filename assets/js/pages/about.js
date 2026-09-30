@@ -26,7 +26,7 @@ function profileHtml(profile) {
   const name = profile.full_name || 'نام هنرمند — در انتظار اطلاعات';
   return `
     <div class="about-head">
-      <img class="about-photo" src="${photo}" alt="عکس معصومه (عارفه) پیمان" loading="lazy">
+      <img id="about-photo-img" class="about-photo" src="${photo}" alt="عکس معصومه (عارفه) پیمان" loading="lazy">
       <div class="about-info">
         <h1 class="display-2">${escapeHtml(name)}</h1>
         ${profile.title_role ? `<p class="lead">${escapeHtml(profile.title_role)}</p>` : ''}
@@ -87,6 +87,12 @@ async function initAbout() {
   }
 
   setHtml('about-head', profileHtml(profile || FALLBACK_PROFILE));
+  const photoImg = document.getElementById('about-photo-img');
+  if (photoImg && photoImg.src.includes('supabase.co')) {
+    photoImg.addEventListener('error', () => {
+      if (photoImg.src.includes('supabase.co')) photoImg.src = FALLBACK_PHOTO;
+    });
+  }
   setHtml('about-bio', bioHtml(profile));
 
   const allTimeline = timeline.length ? timeline : FALLBACK_TIMELINE;
