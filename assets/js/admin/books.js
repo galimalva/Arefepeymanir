@@ -177,24 +177,62 @@ function openForm(book) {
     if (e.target === overlay) overlay.remove();
   });
 
-  overlay.querySelector('#fCoverFile').addEventListener('change', async (event) => {
+  let pendingUploads = [];
+  let coverRequested = false;
+  const saveButton = overlay.querySelector('#fSave');
+
+  const syncSaveState = () => {
+    const busy = pendingUploads.length > 0;
+    saveButton.disabled = busy;
+    saveButton.textContent = busy ? 'در حال بارگذاری…' : 'ذخیره';
+  };
+
+  const trackUpload = (task) => {
+    pendingUploads.push(task);
+    syncSaveState();
+    const done = () => {
+      pendingUploads = pendingUploads.filter((item) => item !== task);
+      syncSaveState();
+    };
+    task.then(done, done);
+  };
+
+  overlay.querySelector('#fCoverFile').addEventListener('change', (event) => {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
     const badCover = validateImageFile(file);
     if (badCover) { toast(badCover, 'error'); return; }
     const path = `${config.storage.tenantFolder}/books/${Date.now()}-${file.name.replace(/[^\w.\-]/g, '')}`;
-    const { error } = await uploadFile(config.storage.publicBucket, path, file);
-    if (error) {
-      toast('خطا در آپلود تصویر: ' + (error.message || ''), 'error');
-      return;
-    }
-    modalCoverPath = path;
-    const preview = overlay.querySelector('#fCoverPreview');
-    if (preview) preview.innerHTML = `<img src="${publicUrl(path)}" alt="جلد جدید">`;
-    toast('تصویر جلد آپلود شد');
+    coverRequested = true;
+    trackUpload((async () => {
+      const { error } = await uploadFile(config.storage.publicBucket, path, file);
+      if (error) {
+        toast('خطا در آپلود تصویر: ' + (error.message || ''), 'error');
+        event.target.value = '';
+        return;
+      }
+      modalCoverPath = path;
+      coverRequested = false;
+      const preview = overlay.querySelector('#fCoverPreview');
+      if (preview) preview.innerHTML = `<img src="${publicUrl(path)}" alt="جلد جدید">`;
+      toast('تصویر جلد آپلود شد');
+    })());
   });
 
   overlay.querySelector('#fSave').addEventListener('click', async () => {
+    if (saveButton.disabled) return;
+    if (pendingUploads.length) {
+      saveButton.disabled = true;
+      saveButton.textContent = 'در حال بارگذاری…';
+      await Promise.all(pendingUploads);
+    }
+    if (coverRequested && !modalCoverPath) {
+      syncSaveState();
+      toast('آپلود تصویر جلد ناموفق بود؛ لطفاً دوباره تلاش کنید.', 'error');
+      return;
+    }
+    saveButton.disabled = true;
+    saveButton.textContent = 'در حال ذخیره…';
     const title = overlay.querySelector('#fTitle').value;
     const payload = buildBookPayload({
       title,
@@ -213,6 +251,7 @@ function openForm(book) {
     const { error } = await saveBook(editing, payload, getClient());
     if (error) {
       toast('خطا در ذخیره: ' + (error.message || ''), 'error');
+      syncSaveState();
       return;
     }
     toast('کتاب ذخیره شد');

@@ -101,19 +101,24 @@ async function loadExhibitions() {
   let rows = [];
   let total = 0;
   try {
-    const base = client.from(dbTable('exhibitions')).select('*').eq('is_published', true);
-    let filtered = base;
-    if (q) filtered = filtered.ilike('title', `%${q}%`);
-    if (type) filtered = filtered.eq('type', type);
-    const countQuery = filtered.count('exact', { head: true });
+    let countQuery = client
+      .from(dbTable('exhibitions'))
+      .select('*', { count: 'exact', head: true })
+      .eq('is_published', true);
+    if (q) countQuery = countQuery.ilike('title', `%${q}%`);
+    if (type) countQuery = countQuery.eq('type', type);
     const countResult = await countQuery;
+    if (countResult.error) throw countResult.error;
     total = countResult.count ?? 0;
 
-    filtered = filtered
+    let listQuery = client.from(dbTable('exhibitions')).select('*').eq('is_published', true);
+    if (q) listQuery = listQuery.ilike('title', `%${q}%`);
+    if (type) listQuery = listQuery.eq('type', type);
+    const { data, error } = await listQuery
       .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
       .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-    const { data } = await filtered;
+    if (error) throw error;
     rows = data || [];
   } catch (error) {
     setHtml('exhibitions-grid', '<p class="section-empty">خطایی در دریافت نمایشگاه‌ها رخ داد.</p>');

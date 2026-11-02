@@ -42,7 +42,8 @@ function setHtml(id, html) {
 function imageUrl(artwork) {
   if (artwork.image) return publicUrl(artwork.image);
   if (artwork.image_url) return artwork.image_url;
-  return '';
+  const extra = Array.isArray(artwork.images) ? artwork.images.find(Boolean) : null;
+  return extra ? publicUrl(extra) : '';
 }
 
 function imgPlaceholder(title) {
@@ -62,6 +63,7 @@ function tableRow(artwork) {
   const image = imageUrl(artwork)
     ? `<img class="table-thumb" src="${imageUrl(artwork)}" alt="${escapeHtml(artwork.title || 'اثر')}" loading="lazy">`
     : imgPlaceholder(artwork.title);
+  const extrasCount = Array.isArray(artwork.images) ? artwork.images.filter(Boolean).length : 0;
   const meta = [
     artwork.category ? (CATEGORY_LABELS[artwork.category] || artwork.category) : null,
     artwork.collection || null,
@@ -75,6 +77,7 @@ function tableRow(artwork) {
         <strong>${escapeHtml(artwork.title)} ${artwork.is_featured ? '<span class="badge badge--secondary">ویژه</span>' : ''}</strong>
         ${artwork.dimensions ? `<br><small class="muted">${escapeHtml(artwork.dimensions)}</small>` : ''}
         <br><small class="muted">${escapeHtml(meta)}</small>
+        ${extrasCount ? `<br><small class="muted">${toPersianDigits(extrasCount)} تصویر اضافی</small>` : ''}
       </td>
       <td>${statusBadge(artwork)}</td>
       <td>
@@ -257,44 +260,86 @@ function openForm(artwork) {
     if (e.target === overlay) overlay.remove();
   });
 
-  overlay.querySelector('#fImageFile').addEventListener('change', async (event) => {
+  let pendingUploads = [];
+  let mainImageRequested = false;
+  const saveButton = overlay.querySelector('#fSave');
+
+  const syncSaveState = () => {
+    const busy = pendingUploads.length > 0;
+    saveButton.disabled = busy;
+    saveButton.textContent = busy ? 'در حال بارگذاری…' : 'ذخیره';
+  };
+
+  const trackUpload = (task) => {
+    pendingUploads.push(task);
+    syncSaveState();
+    const done = () => {
+      pendingUploads = pendingUploads.filter((item) => item !== task);
+      syncSaveState();
+    };
+    task.then(done, done);
+  };
+
+  overlay.querySelector('#fImageFile').addEventListener('change', (event) => {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
     const badImage = validateImageFile(file);
     if (badImage) { toast(badImage, 'error'); return; }
     const path = `${config.storage.tenantFolder}/paintings/${Date.now()}-${file.name.replace(/[^\w.\-]/g, '')}`;
-    const { error } = await uploadFile(config.storage.publicBucket, path, file);
-    if (error) {
-      toast('خطا در آپلود تصویر: ' + (error.message || ''), 'error');
-      return;
-    }
-    modalImagePath = path;
-    const preview = overlay.querySelector('#fImagePreview');
-    if (preview) preview.innerHTML = `<img src="${publicUrl(path)}" alt="تصویر جدید">`;
-    toast('تصویر اصلی آپلود شد');
+    mainImageRequested = true;
+    trackUpload((async () => {
+      const { error } = await uploadFile(config.storage.publicBucket, path, file);
+      if (error) {
+        toast('خطا در آپلود تصویر: ' + (error.message || ''), 'error');
+        event.target.value = '';
+        return;
+      }
+      modalImagePath = path;
+      mainImageRequested = false;
+      const preview = overlay.querySelector('#fImagePreview');
+      if (preview) preview.innerHTML = `<img src="${publicUrl(path)}" alt="تصویر جدید">`;
+      toast('تصویر اصلی آپلود شد');
+    })());
   });
 
-  overlay.querySelector('#fImagesFile').addEventListener('change', async (event) => {
+  overlay.querySelector('#fImagesFile').addEventListener('change', (event) => {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
     for (const extraFile of files) {
       const badExtra = validateImageFile(extraFile);
       if (badExtra) { toast(badExtra, 'error'); return; }
     }
-    for (const file of files) {
-      const path = `${config.storage.tenantFolder}/paintings/${Date.now()}-${file.name.replace(/[^\w.\-]/g, '')}`;
-      const { error } = await uploadFile(config.storage.publicBucket, path, file);
-      if (error) {
-        toast('خطا در آپلود تصویر: ' + (error.message || ''), 'error');
-        continue;
+    trackUpload((async () => {
+      let uploaded = 0;
+      for (const file of files) {
+        const path = `${config.storage.tenantFolder}/paintings/${Date.now()}-${file.name.replace(/[^\w.\-]/g, '')}`;
+        const { error } = await uploadFile(config.storage.publicBucket, path, file);
+        if (error) {
+          toast('خطا در آپلود تصویر: ' + (error.message || ''), 'error');
+          continue;
+        }
+        modalImages.push(path);
+        uploaded += 1;
       }
-      modalImages.push(path);
-    }
-    renderImagesList();
-    toast('تصاویر اضافی آپلود شدند');
+      renderImagesList();
+      toast(uploaded ? 'تصاویر اضافی آپلود شدند' : 'آپلود تصاویر اضافی ناموفق بود', uploaded ? undefined : 'error');
+    })());
   });
 
   overlay.querySelector('#fSave').addEventListener('click', async () => {
+    if (saveButton.disabled) return;
+    if (pendingUploads.length) {
+      saveButton.disabled = true;
+      saveButton.textContent = 'در حال بارگذاری…';
+      await Promise.all(pendingUploads);
+    }
+    if (mainImageRequested && !modalImagePath) {
+      syncSaveState();
+      toast('آپلود تصویر اصلی ناموفق بود؛ لطفاً دوباره تلاش کنید.', 'error');
+      return;
+    }
+    saveButton.disabled = true;
+    saveButton.textContent = 'در حال ذخیره…';
     const payload = buildArtworkPayload({
       title: overlay.querySelector('#fTitle').value,
       category: overlay.querySelector('#fCategory').value,
@@ -316,6 +361,7 @@ function openForm(artwork) {
     const { error } = await saveArtwork(editing, payload, getClient());
     if (error) {
       toast('خطا در ذخیره: ' + (error.message || ''), 'error');
+      syncSaveState();
       return;
     }
     if (removedImages.length) {

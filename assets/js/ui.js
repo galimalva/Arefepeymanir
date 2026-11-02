@@ -26,9 +26,25 @@ const MENU_PRIMARY_KEYS = new Set([
   'gallery', 'exhibitions', 'awards', 'contact'
 ]);
 
-function renderHamburger(extra = '', id = MENU_TOGGLE_ID) {
+const ALWAYS_AVAILABLE_NAV_KEYS = new Set(['index', 'about', 'resume', 'contact']);
+
+const NAV_CONTENT_SOURCES = {
+  books: 'books',
+  'literary-works': 'literary_works',
+  reviews: 'book_reviews',
+  gallery: 'artworks',
+  exhibitions: 'exhibitions',
+  awards: 'awards'
+};
+
+const NAV_AVAILABILITY_CACHE_KEY = 'payman-nav-availability-v1';
+const NAV_AVAILABILITY_TTL = 30000;
+
+let navAvailabilityPromise = null;
+
+function renderHamburger(extra = '', id = MENU_TOGGLE_ID, expanded = false) {
   return `
-    <button class="sig-hamburger" id="${id}" type="button" aria-expanded="false" aria-controls="menu-overlay" aria-label="باز و بسته کردن منوی اصلی" ${extra}>
+    <button class="sig-hamburger" ${extra} id="${id}" type="button" aria-expanded="${expanded}" aria-controls="menu-overlay" aria-label="${expanded ? 'بستن منوی اصلی' : 'باز و بسته کردن منوی اصلی'}">
       <span></span><span></span><span></span>
     </button>`;
 }
@@ -81,6 +97,94 @@ export function getSiteContext() {
   return siteContextPromise;
 }
 
+function readNavAvailabilityCache() {
+  try {
+    const raw = sessionStorage.getItem(NAV_AVAILABILITY_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.keys)) return null;
+    if (Date.now() - parsed.at > NAV_AVAILABILITY_TTL) return null;
+    return new Set(parsed.keys);
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeNavAvailabilityCache(keys) {
+  try {
+    sessionStorage.setItem(
+      NAV_AVAILABILITY_CACHE_KEY,
+      JSON.stringify({ keys: Array.from(keys), at: Date.now() })
+    );
+  } catch (error) {
+    /* بدون حافظه نشست هم صفحه درست کار می‌کند */
+  }
+}
+
+function withSoftTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(null), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+async function hasPublishedContent(client, table) {
+  try {
+    const result = await withSoftTimeout(
+      client
+        .from(dbTable(table))
+        .select('*', { count: 'exact', head: true })
+        .eq('is_published', true),
+      4000
+    );
+    if (!result || result.error) return true;
+    return (result.count || 0) > 0;
+  } catch (error) {
+    return true;
+  }
+}
+
+async function loadAvailableNavKeys() {
+  const cached = readNavAvailabilityCache();
+  if (cached) return cached;
+
+  let client;
+  try {
+    client = getClient();
+  } catch (error) {
+    return null;
+  }
+
+  const dynamicItems = config.navLinks.filter(
+    (item) => !ALWAYS_AVAILABLE_NAV_KEYS.has(item.key) && NAV_CONTENT_SOURCES[item.key]
+  );
+  const checks = await Promise.all(
+    dynamicItems.map(async (item) => [
+      item.key,
+      await hasPublishedContent(client, NAV_CONTENT_SOURCES[item.key])
+    ])
+  );
+
+  const available = new Set(ALWAYS_AVAILABLE_NAV_KEYS);
+  config.navLinks.forEach((item) => {
+    if (!NAV_CONTENT_SOURCES[item.key]) available.add(item.key);
+  });
+  checks.forEach(([key, ok]) => {
+    if (ok) available.add(key);
+  });
+
+  writeNavAvailabilityCache(available);
+  return available;
+}
+
+function getAvailableNavKeys() {
+  if (!navAvailabilityPromise) {
+    navAvailabilityPromise = loadAvailableNavKeys();
+  }
+  return navAvailabilityPromise;
+}
+
 function wireLogout() {
   const btn = document.getElementById('logout-btn');
   if (!btn) return;
@@ -98,6 +202,7 @@ export async function renderHeader(pageKey, isAdmin) {
   const el = document.getElementById('site-header');
   if (!el) return;
 
+  const availableKeysPromise = isAdmin ? null : getAvailableNavKeys();
   const context = await getSiteContext();
 
   if (isAdmin) {
@@ -134,13 +239,13 @@ export async function renderHeader(pageKey, isAdmin) {
     .filter((item) => MENU_PRIMARY_KEYS.has(item.key))
     .map(
       (item) =>
-        `<a class="menu-link${item.key === pageKey ? ' is-active' : ''}" href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a>`
+        `<a class="menu-link${item.key === pageKey ? ' is-active' : ''}" data-nav-key="${item.key}" href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a>`
     )
     .join('');
 
   const secondaryLinks = config.navLinks
     .filter((item) => !MENU_PRIMARY_KEYS.has(item.key))
-    .map((item) => `<a href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a>`)
+    .map((item) => `<a data-nav-key="${item.key}" href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a>`)
     .join('');
 
   const socials = context.socials.length
@@ -174,7 +279,7 @@ export async function renderHeader(pageKey, isAdmin) {
     <div class="menu-shell">
       <div class="menu-head">
         <span class="menu-head-brand"><span class="brand-mark" aria-hidden="true"></span> ${escapeHtml(context.title)}</span>
-        ${renderHamburger('data-menu-close aria-expanded="true"', 'menu-close')}
+        ${renderHamburger('data-menu-close', 'menu-close', true)}
       </div>
       <nav class="menu-links" aria-label="ناوبری اصلی">${primaryLinks}</nav>
       ${secondaryLinks ? `<nav class="menu-sub" aria-label="دسترسی‌های بیشتر">${secondaryLinks}</nav>` : ''}
@@ -183,6 +288,17 @@ export async function renderHeader(pageKey, isAdmin) {
         ${socials ? `<div class="menu-socials">${socials}</div>` : ''}
       </div>
     </div>`;
+
+  if (availableKeysPromise) {
+    availableKeysPromise.then((availableKeys) => {
+      if (!availableKeys) return;
+      overlay.querySelectorAll('[data-nav-key]').forEach((link) => {
+        if (!availableKeys.has(link.dataset.navKey)) link.remove();
+      });
+      const sub = overlay.querySelector('.menu-sub');
+      if (sub && !sub.querySelector('a')) sub.remove();
+    });
+  }
 
   if (!toggle || !overlay) return;
 
@@ -218,6 +334,10 @@ export async function renderHeader(pageKey, isAdmin) {
     link.addEventListener('click', () => setMenu(false));
   });
 
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) setMenu(false);
+  });
+
   overlay.addEventListener('keydown', (event) => {
     if (event.key !== 'Tab') return;
     const items = focusables();
@@ -246,13 +366,13 @@ export async function renderFooter() {
   const year = new Date().getFullYear();
 
   const isAdmin = document.body.dataset.admin === 'true';
-  const links = isAdmin
-    ? ADMIN_LINKS.map(
-        (item) => `<li><a href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a></li>`
-      ).join('')
-    : config.navLinks
-        .map((item) => `<li><a href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a></li>`)
-        .join('');
+  const availableKeys = isAdmin ? null : await getAvailableNavKeys();
+  const navItems = isAdmin
+    ? ADMIN_LINKS
+    : config.navLinks.filter((item) => !availableKeys || availableKeys.has(item.key));
+  const links = navItems
+    .map((item) => `<li><a href="${escapeHtml(item.href)}">${escapeHtml(item.label)}</a></li>`)
+    .join('');
 
   const socials = context.socials
     .map(

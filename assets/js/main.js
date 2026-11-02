@@ -1,4 +1,4 @@
-import { renderHeader, renderFooter } from './ui.js';
+import { renderHeader, renderFooter } from './ui.js?v=31';
 import { initAuth, requireAdmin } from './auth.js';
 
 function injectAdminGear() {
